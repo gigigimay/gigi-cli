@@ -44,7 +44,7 @@ gigi unskip -a              # Unskip all skip-worktree files (from git)
 
 ```bash
 gigi save                   # Save all unsaved skip-worktree files to list
-gigi reset                  # Unskip all skip-worktree files and clear list
+gigi reset                  # Unskip all skip-worktree files and clear list (same as `gigi unskip -a`)
 ```
 
 ### Manage the list
