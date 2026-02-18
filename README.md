@@ -23,32 +23,34 @@ source ~/.zshrc
 ### Skip files
 
 ```bash
-gigi skip <files...>        # Skip file(s) (temporary, not saved)
-gigi skip -s <files...>     # Skip file(s) and save to list
+gigi skip <files...>        # Skip file(s) and save to list
+gigi skip -t <files...>     # Skip file(s) without saving (temporary)
+gigi skip -d                # Skip all modified files and save to list
+gigi skip -d -t             # Skip all modified files without saving
 gigi skip                   # Re-apply skip to all saved files
 ```
 
 ### Unskip files
 
 ```bash
-gigi unskip <files...>      # Unskip file(s)
-gigi unskip -s <files...>   # Unskip file(s) and remove from list
-gigi unskip                 # Unskip all saved files (list remains)
-gigi unskip -s              # Unskip all saved files and clear the list
+gigi unskip <files...>      # Unskip file(s) and remove from list
+gigi unskip -t <files...>   # Unskip file(s) without removing from list
+gigi unskip                 # Unskip all saved files and clear list
+gigi unskip -t              # Unskip all saved files (list remains)
 gigi unskip -a              # Unskip all skip-worktree files (from git)
 ```
 
 ### Shortcuts
 
 ```bash
+gigi save                   # Save all unsaved skip-worktree files to list
 gigi reset                  # Unskip all skip-worktree files and clear list
 ```
 
 ### Manage the list
 
 ```bash
-gigi ls                     # List saved file paths
-gigi ls -a                  # List all skip-worktree files (saved & not saved)
+gigi ls                     # List skip-worktree files (saved & not saved)
 gigi path                   # Print the list file path
 gigi edit                   # Open the list file in $EDITOR (defaults to cursor)
 ```
@@ -56,11 +58,12 @@ gigi edit                   # Open the list file in $EDITOR (defaults to cursor)
 ## How it works
 
 - **Skip/unskip** runs `git update-index --skip-worktree` / `--no-skip-worktree`.
-- **`-s` flag** persists the action to a tracking file at `.git/skip-worktree-files`.
-- Without `-s`, the skip/unskip is ephemeral -- the list is not modified.
+- By default, skip/unskip **saves to / removes from** the tracking file at `.git/skip-worktree-files`.
+- **`-t` flag** makes the action temporary -- the list is not modified.
 - **`-a` flag** operates on all files git has marked, not just the saved list.
 - **`gigi skip`** (no args) re-applies all saved skips, handy after switching branches.
-- **`gigi reset`** is a shortcut for unskipping everything and clearing the list.
+- **`gigi save`** retroactively saves any unsaved skip-worktree files to the list.
+- **`gigi reset`** unskips everything and clears the list.
 - File paths are always normalized to repo-relative paths.
 
 The tracking file lives inside `.git/`, so it's per-repo and never committed.
