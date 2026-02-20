@@ -40,6 +40,23 @@ gigi unskip -t              # Unskip all saved files (list remains)
 gigi unskip -a              # Unskip all skip-worktree files (from git)
 ```
 
+### Stash & pop (for rebasing)
+
+```bash
+gigi stash                  # Unskip saved files and stash them
+gigi pop                    # Pop stash and re-apply skip-worktree
+```
+
+Useful when you need to rebase (or run other git operations that don't allow dirty files):
+
+```bash
+gigi stash
+git rebase origin/main
+gigi pop
+```
+
+`gigi stash` will refuse to run if you have uncommitted changes outside of the saved skip-worktree files.
+
 ### Shortcuts
 
 ```bash
@@ -63,6 +80,8 @@ gigi edit                   # Open the list file in $EDITOR (defaults to cursor)
 - **`-a` flag** operates on all files git has marked, not just the saved list.
 - **`gigi skip`** (no args) re-applies all saved skips, handy after switching branches.
 - **`gigi save`** retroactively saves any unsaved skip-worktree files to the list.
+- **`gigi stash`** unskips saved files, then stashes them. Blocks if there are other uncommitted changes.
+- **`gigi pop`** pops the stash and re-applies skip-worktree to all saved files.
 - **`gigi reset`** unskips everything and clears the list.
 - File paths are always normalized to repo-relative paths.
 

@@ -205,6 +205,51 @@ gigi() {
         [ -n "$file" ] && echo "Saved: $file"
       done
       ;;
+    stash)
+      if [ ! -f "$track_file" ] || [ ! -s "$track_file" ]; then
+        echo "No saved files to stash."
+        return 1
+      fi
+      local dirty
+      dirty=$(git diff --name-only; git diff --cached --name-only)
+      if [ -n "$dirty" ]; then
+        echo "Error: You have uncommitted changes. Commit or stash them first."
+        return 1
+      fi
+      local stash_files=()
+      while IFS= read -r file; do
+        [ -z "$file" ] && continue
+        git update-index --no-skip-worktree "$file" 2>/dev/null
+        stash_files+=("$file")
+      done < "$track_file"
+      if [ ${#stash_files[@]} -eq 0 ]; then
+        echo "No files to stash."
+        return 1
+      fi
+      git stash push -m "[gigi] skip-worktree files" -- "${stash_files[@]}" && {
+        echo "Stashed ${#stash_files[@]} file(s)."
+      } || {
+        for file in "${stash_files[@]}"; do
+          git update-index --skip-worktree "$file" 2>/dev/null
+        done
+        echo "Stash failed. Re-applied skip-worktree."
+        return 1
+      }
+      ;;
+    pop)
+      git stash pop && {
+        if [ -f "$track_file" ] && [ -s "$track_file" ]; then
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            git update-index --skip-worktree "$file" 2>/dev/null && echo "Skipped: $file"
+          done < "$track_file"
+        fi
+        echo "Popped and re-applied skip-worktree."
+      } || {
+        echo "Stash pop failed. Resolve conflicts, then run 'gigi skip' to re-apply."
+        return 1
+      }
+      ;;
     reset)
       local files
       files=$(git ls-files -v | grep '^S' | cut -c3-)
@@ -244,6 +289,8 @@ gigi() {
       echo "  unskip                Unskip all saved files and clear list"
       echo "  unskip -t             Unskip all saved files (list remains)"
       echo "  unskip -a             Unskip all skip-worktree files (from git)"
+      echo "  stash                 Unskip saved files and git stash them"
+      echo "  pop                   Git stash pop and re-apply skip-worktree"
       echo "  save                  Save all unsaved skip-worktree files to list"
       echo "  reset                 Unskip all skip-worktree files and clear list"
       echo "  ls                    List skip-worktree files (saved & not saved)"

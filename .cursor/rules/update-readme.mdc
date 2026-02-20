@@ -1,0 +1,9 @@
+---
+description: Keep README.md in sync when CLI commands change
+globs: gigi.zsh
+alwaysApply: false
+---
+
+# Update README on CLI changes
+
+When any change is made to the CLI API in `gigi.zsh` (new commands, renamed commands, changed flags, updated help text, removed commands), always update `README.md` to reflect those changes.
