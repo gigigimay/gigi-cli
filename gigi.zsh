@@ -12,6 +12,21 @@ gigi() {
     echo "$p"
   }
 
+  _gigi_is_modified() {
+    local file="$1"
+    local index_hash work_hash
+    index_hash=$(git ls-files -s "$file" 2>/dev/null | awk '{print $2}')
+    [ -z "$index_hash" ] && return 1
+    work_hash=$(git hash-object "$git_root/$file" 2>/dev/null)
+    [ "$index_hash" != "$work_hash" ]
+  }
+
+  _gigi_first_modified_line() {
+    local file="$1"
+    diff -U0 <(git show :"$file" 2>/dev/null) "$git_root/$file" 2>/dev/null \
+      | grep -m1 '^@@' | sed 's/.*+\([0-9]*\).*/\1/'
+  }
+
   case "$1" in
     skip)
       local temp=false
@@ -163,14 +178,26 @@ gigi() {
         unsaved_files="$all_files"
       fi
 
+      local c_yellow='\033[33m' c_dim='\033[2m' c_reset='\033[0m'
+
       if [ -n "$saved_files" ]; then
         echo "Saved:"
         echo "$saved_files" | while IFS= read -r file; do
           [ -z "$file" ] && continue
           if [ -n "$all_files" ] && echo "$all_files" | grep -Fxq "$file"; then
-            echo "  $file"
+            if _gigi_is_modified "$file"; then
+              local line=$(_gigi_first_modified_line "$file")
+              printf "  ${c_yellow}%s:%s${c_reset} ${c_dim}(modified)${c_reset}\n" "$file" "$line"
+            else
+              echo "  $file"
+            fi
           else
-            echo "  $file (not active)"
+            if _gigi_is_modified "$file"; then
+              local line=$(_gigi_first_modified_line "$file")
+              printf "  ${c_yellow}%s:%s${c_reset} ${c_dim}(not active, modified)${c_reset}\n" "$file" "$line"
+            else
+              printf "  %s ${c_dim}(not active)${c_reset}\n" "$file"
+            fi
           fi
         done
       fi
@@ -179,7 +206,13 @@ gigi() {
         if [ -n "$saved_files" ]; then echo ""; fi
         echo "Not saved:"
         echo "$unsaved_files" | while IFS= read -r file; do
-          [ -n "$file" ] && echo "  $file"
+          [ -z "$file" ] && continue
+          if _gigi_is_modified "$file"; then
+            local line=$(_gigi_first_modified_line "$file")
+            printf "  ${c_yellow}%s:%s${c_reset} ${c_dim}(modified)${c_reset}\n" "$file" "$line"
+          else
+            echo "  $file"
+          fi
         done
       fi
       ;;
