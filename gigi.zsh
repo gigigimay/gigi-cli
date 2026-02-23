@@ -22,9 +22,10 @@ gigi() {
   }
 
   _gigi_first_modified_line() {
-    local file="$1"
-    diff -U0 <(git show :"$file" 2>/dev/null) "$git_root/$file" 2>/dev/null \
-      | grep -m1 '^@@' | sed 's/.*+\([0-9]*\).*/\1/'
+    local file="$1" line
+    line=$(diff -U0 <(git show :"$file" 2>/dev/null) "$git_root/$file" 2>/dev/null \
+      | grep -m1 '^@@' | sed 's/.*+\([0-9]*\).*/\1/')
+    echo "${line:-1}"
   }
 
   case "$1" in
@@ -252,13 +253,15 @@ gigi() {
       local stash_files=()
       while IFS= read -r file; do
         [ -z "$file" ] && continue
-        git update-index --no-skip-worktree "$file" 2>/dev/null
-        stash_files+=("$file")
+        _gigi_is_modified "$file" && stash_files+=("$file")
       done < "$track_file"
       if [ ${#stash_files[@]} -eq 0 ]; then
-        echo "No files to stash."
-        return 1
+        echo "No modified saved files to stash."
+        return 0
       fi
+      for file in "${stash_files[@]}"; do
+        git update-index --no-skip-worktree "$file" 2>/dev/null
+      done
       git stash push -m "[gigi] skip-worktree files" -- "${stash_files[@]}" && {
         echo "Stashed ${#stash_files[@]} file(s)."
       } || {
@@ -270,7 +273,13 @@ gigi() {
       }
       ;;
     pop)
-      git stash pop && {
+      local stash_ref
+      stash_ref=$(git stash list | grep -m1 '\[gigi\]' | cut -d: -f1)
+      if [ -z "$stash_ref" ]; then
+        echo "No gigi stash found."
+        return 1
+      fi
+      git stash pop "$stash_ref" && {
         if [ -f "$track_file" ] && [ -s "$track_file" ]; then
           while IFS= read -r file; do
             [ -z "$file" ] && continue
