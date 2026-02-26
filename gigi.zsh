@@ -179,7 +179,7 @@ gigi() {
         unsaved_files="$all_files"
       fi
 
-      local c_yellow='\033[33m' c_dim='\033[2m' c_reset='\033[0m'
+      local c_yellow='\033[33m' c_dim='\033[2m' c_dim_yellow='\033[2;33m' c_reset='\033[0m'
 
       if [ -n "$saved_files" ]; then
         echo "Saved:"
@@ -188,14 +188,14 @@ gigi() {
           if [ -n "$all_files" ] && echo "$all_files" | grep -Fxq "$file"; then
             if _gigi_is_modified "$file"; then
               local line=$(_gigi_first_modified_line "$file")
-              printf "  ${c_yellow}%s:%s${c_reset} ${c_dim}(modified)${c_reset}\n" "$file" "$line"
+              printf "  ${c_yellow}%s${c_dim_yellow}:%s${c_reset} ${c_dim}(modified)${c_reset}\n" "$file" "$line"
             else
               echo "  $file"
             fi
           else
             if _gigi_is_modified "$file"; then
               local line=$(_gigi_first_modified_line "$file")
-              printf "  ${c_yellow}%s:%s${c_reset} ${c_dim}(not active, modified)${c_reset}\n" "$file" "$line"
+              printf "  ${c_yellow}%s${c_dim_yellow}:%s${c_reset} ${c_dim}(not active, modified)${c_reset}\n" "$file" "$line"
             else
               printf "  %s ${c_dim}(not active)${c_reset}\n" "$file"
             fi
@@ -210,7 +210,7 @@ gigi() {
           [ -z "$file" ] && continue
           if _gigi_is_modified "$file"; then
             local line=$(_gigi_first_modified_line "$file")
-            printf "  ${c_yellow}%s:%s${c_reset} ${c_dim}(modified)${c_reset}\n" "$file" "$line"
+            printf "  ${c_yellow}%s${c_dim_yellow}:%s${c_reset} ${c_dim}(modified)${c_reset}\n" "$file" "$line"
           else
             echo "  $file"
           fi
