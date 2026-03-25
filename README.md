@@ -9,7 +9,7 @@ Useful when you have local modifications (mock data, debug configs, etc.) that y
 Add this to your `~/.zshrc` (or `~/.bashrc`):
 
 ```bash
-[ -f "$HOME/Projects/gigi-cli/gigi.zsh" ] && source "$HOME/Projects/gigi-cli/gigi.zsh"
+[ -f "$HOME/Projects/gigi-cli/gigi.zsh" ] && source "$HOME/PATH_TO_THIS_PROJECT/gigi.zsh"
 ```
 
 Then reload your shell:
